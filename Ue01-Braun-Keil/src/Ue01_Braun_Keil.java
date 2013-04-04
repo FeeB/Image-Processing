@@ -8,6 +8,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.*;
 import java.awt.*;
 import java.io.File;
+import java.util.Random;
 
 public class Ue01_Braun_Keil extends JPanel {
 	
@@ -214,19 +215,24 @@ public class Ue01_Braun_Keil extends JPanel {
 	
 	private void makeGray(ImageView imgView) {
 		int pixels[] = imgView.getPixels();
-		
 		// TODO: convert pixels to grayscale
 		
 		// loop over all pixels
 		for(int i = 0; i < pixels.length; i++) {
-			//
+			int r = argb_read(pixels[i],16);  
+			int b = argb_read(pixels[i],8);
+			int g =argb_read(pixels[i],0);
+			
+			int grey_value = (r+b+g)/3;
+			
+			pixels[i] = 0xff000000 | (grey_value<<16) | (grey_value<<8) | grey_value;
+			
 		}
+		//imgView.setPixels(pixels);
 	}
 	
 	private void makeNoise(ImageView imgView) {
 		int pixels[] = imgView.getPixels();
-		
-		// TODO: add noise to pixels
 		
 	}
 	
@@ -241,7 +247,10 @@ public class Ue01_Braun_Keil extends JPanel {
 		// TODO: implement filters 
 		
 	}
-
-
+	
+	private int argb_read(int pixel, int shift_value){
+		int x = (pixel >> shift_value) & 0xff;
+		return x; 
+	}
 }
 
