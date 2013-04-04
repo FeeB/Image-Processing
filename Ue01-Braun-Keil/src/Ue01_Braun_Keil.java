@@ -261,7 +261,20 @@ public class Ue01_Braun_Keil extends JPanel {
 		int height = srcView.getImgHeight();
 		int filter = filterType.getSelectedIndex();
 		
-		// TODO: implement filters 
+		if (filter == 1){
+			for(int y = 0; y < height; y++) {
+				for(int x = 0; x < width; x++){
+					for (int k = -1; k < 2; k++){
+						for (int l = -1; l < 2; l++){
+							//todo: rechnen...
+						}
+					}
+				}
+				
+			}
+			java.util.Arrays.sort(src);
+			
+		}
 		
 	}
 	
