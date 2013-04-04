@@ -228,12 +228,29 @@ public class Ue01_Braun_Keil extends JPanel {
 			pixels[i] = 0xff000000 | (grey_value<<16) | (grey_value<<8) | grey_value;
 			
 		}
-		//imgView.setPixels(pixels);
 	}
 	
 	private void makeNoise(ImageView imgView) {
 		int pixels[] = imgView.getPixels();
-		
+		for (int i = 0; i < getCountOfRandomNumber(Math.round(noiseFraction * 100.0), pixels.length); i++){
+			int pos = getRandomNumber(pixels.length);
+			if (pos % 2 == 0){
+				pixels[pos] = 0xff000000 | (0 <<16) | (0 <<8);
+			}else{
+				pixels[pos] = 0xff000000 | (255 <<16) | (255 <<8) | 255;
+			}
+		}
+	}
+	
+	private int getRandomNumber(int maxValue){
+		int number = 0 + (int)(Math.random() * ((maxValue - 0) + 1));
+		return number;
+	}
+	
+	private int getCountOfRandomNumber(long percent, int length){
+		int pixels = length;
+		int number = (int) (pixels / 100 * percent);
+		return number;
 	}
 	
 	
