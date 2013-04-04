@@ -9,7 +9,7 @@ import java.awt.event.*;
 import java.awt.*;
 import java.io.File;
 
-public class Ue01_Nachname_Vorname extends JPanel {
+public class Ue01_Braun_Keil extends JPanel {
 	
 	private static final long serialVersionUID = 1L;
 	private static final int borderWidth = 5;
@@ -36,7 +36,7 @@ public class Ue01_Nachname_Vorname extends JPanel {
 	private JComboBox filterType;
 	
 
-	public Ue01_Nachname_Vorname() {
+	public Ue01_Braun_Keil() {
         super(new BorderLayout(borderWidth, borderWidth));
 
         setBorder(BorderFactory.createEmptyBorder(borderWidth,borderWidth,borderWidth,borderWidth));
@@ -166,7 +166,7 @@ public class Ue01_Nachname_Vorname extends JPanel {
 		frame = new JFrame("Ue01_Nachname_Vorname");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        JComponent newContentPane = new Ue01_Nachname_Vorname();
+        JComponent newContentPane = new Ue01_Braun_Keil();
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
 
