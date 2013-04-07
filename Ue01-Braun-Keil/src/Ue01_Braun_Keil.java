@@ -11,276 +11,332 @@ import java.io.File;
 import java.util.Random;
 
 public class Ue01_Braun_Keil extends JPanel {
-	
+
 	private static final long serialVersionUID = 1L;
 	private static final int borderWidth = 5;
 	private static final int maxWidth = 400;
 	private static final int maxHeight = maxWidth;
-	private static final int maxNoise = 30;	// in per cent
-	
+	private static final int maxNoise = 30; // in per cent
+
 	private static JFrame frame;
-	
-	private ImageView srcView;			// source image view
-	private ImageView dstView;			// filtered image view
+
+	private ImageView srcView; // source image view
+	private ImageView dstView; // filtered image view
 
 	private int[] origPixels = null;
-	
+
 	private JLabel statusLine = new JLabel("   "); // to print some status text
-	
+
 	private JComboBox noiseType;
 	private JLabel noiseLabel;
 	private JSlider noiseSlider;
 	private JLabel noiseAmountLabel;
 	private boolean addNoise = false;
-	private double noiseFraction = 0.01;	// fraction for number of pixels to be modified by noise
-	
+	private double noiseFraction = 0.01; // fraction for number of pixels to be
+											// modified by noise
+
 	private JComboBox filterType;
-	
 
 	public Ue01_Braun_Keil() {
-        super(new BorderLayout(borderWidth, borderWidth));
+		super(new BorderLayout(borderWidth, borderWidth));
 
-        setBorder(BorderFactory.createEmptyBorder(borderWidth,borderWidth,borderWidth,borderWidth));
- 
-        // load the default image
-        File input = new File("lena_klein.png");
-        
-        if(!input.canRead()) input = openFile(); // file not found, choose another image
-        
-        srcView = new ImageView(input);
-        srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
-        
+		setBorder(BorderFactory.createEmptyBorder(borderWidth, borderWidth,
+				borderWidth, borderWidth));
+
+		// load the default image
+		File input = new File("lena_klein.png");
+
+		if (!input.canRead())
+			input = openFile(); // file not found, choose another image
+
+		srcView = new ImageView(input);
+		srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
+
 		// convert to grayscale
 		makeGray(srcView);
-		        
-        // keep a copy of the grayscaled original image pixels
-        origPixels = srcView.getPixels().clone();
-       
+
+		// keep a copy of the grayscaled original image pixels
+		origPixels = srcView.getPixels().clone();
+
 		// create empty destination image of same size
 		dstView = new ImageView(srcView.getImgWidth(), srcView.getImgHeight());
 		dstView.setMaxSize(new Dimension(maxWidth, maxHeight));
-		
-        // control panel
-        JPanel controls = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(0,borderWidth,0,0);
+
+		// control panel
+		JPanel controls = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(0, borderWidth, 0, 0);
 
 		// load image button
-        JButton load = new JButton("Open Image");
-        load.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		loadFile(openFile());
-        		// convert to grayscale
-        		makeGray(srcView);  
-                // keep a copy of the grayscaled original image pixels
-                origPixels = srcView.getPixels().clone();
-        		calculate(true);
-        	}        	
-        });
-         
-        // selector for the noise method
-        String[] noiseNames = {"No Noise", "Salt & Pepper"};
-        
-        noiseType = new JComboBox(noiseNames);
-        noiseType.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		addNoise = noiseType.getSelectedIndex() > 0;
-        		noiseLabel.setEnabled(addNoise);
-                noiseSlider.setEnabled(addNoise);
-                noiseAmountLabel.setEnabled(addNoise);
-        		calculate(true);
-        	}
-        });
-        
-        // amount of noise
-        noiseLabel = new JLabel("Noise:");
-        noiseAmountLabel = new JLabel("" + Math.round(noiseFraction * 100.0)  + " %");
-        noiseSlider = new JSlider(JSlider.HORIZONTAL, 0, maxNoise, (int) Math.round(noiseFraction * 100.0));
-        noiseSlider.addChangeListener(new ChangeListener() {
-        	public void stateChanged(ChangeEvent e) {
-        		noiseFraction = noiseSlider.getValue() / 100.0;
-        		noiseAmountLabel.setText("" + Math.round(noiseFraction * 100.0) + " %");
-        		calculate(true);
-        	}
-        });
-        noiseLabel.setEnabled(addNoise);
-        noiseSlider.setEnabled(addNoise);
-        noiseAmountLabel.setEnabled(addNoise);
+		JButton load = new JButton("Open Image");
+		load.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				loadFile(openFile());
+				// convert to grayscale
+				makeGray(srcView);
+				// keep a copy of the grayscaled original image pixels
+				origPixels = srcView.getPixels().clone();
+				calculate(true);
+			}
+		});
 
-        // selector for filter
-        String[] filterNames = {"No Filter", "Min Filter", "Max Filter", "Box Filter", "Median Filter"};
-        filterType = new JComboBox(filterNames);
-        filterType.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		calculate(false);
-        	}
-        });
-        
-        controls.add(load, c);
-        controls.add(noiseType, c);
-        controls.add(noiseLabel, c);
-        controls.add(noiseSlider, c);
-        controls.add(noiseAmountLabel, c);
-        controls.add(filterType, c);
-        
-        // images panel
-        JPanel images = new JPanel(new GridLayout(1,2));
-        images.add(srcView);
-        images.add(dstView);
-        
-        // status panel
-        JPanel status = new JPanel(new GridBagLayout());
-        
-        status.add(statusLine, c);
-        
-        add(controls, BorderLayout.NORTH);
-        add(images, BorderLayout.CENTER);
-        add(status, BorderLayout.SOUTH);
-        
-        calculate(true);
-                       
+		// selector for the noise method
+		String[] noiseNames = { "No Noise", "Salt & Pepper" };
+
+		noiseType = new JComboBox(noiseNames);
+		noiseType.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				addNoise = noiseType.getSelectedIndex() > 0;
+				noiseLabel.setEnabled(addNoise);
+				noiseSlider.setEnabled(addNoise);
+				noiseAmountLabel.setEnabled(addNoise);
+				calculate(true);
+			}
+		});
+
+		// amount of noise
+		noiseLabel = new JLabel("Noise:");
+		noiseAmountLabel = new JLabel("" + Math.round(noiseFraction * 100.0)
+				+ " %");
+		noiseSlider = new JSlider(JSlider.HORIZONTAL, 0, maxNoise,
+				(int) Math.round(noiseFraction * 100.0));
+		noiseSlider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				noiseFraction = noiseSlider.getValue() / 100.0;
+				noiseAmountLabel.setText("" + Math.round(noiseFraction * 100.0)
+						+ " %");
+				calculate(true);
+			}
+		});
+		noiseLabel.setEnabled(addNoise);
+		noiseSlider.setEnabled(addNoise);
+		noiseAmountLabel.setEnabled(addNoise);
+
+		// selector for filter
+		String[] filterNames = { "No Filter", "Min Filter", "Max Filter",
+				"Box Filter", "Median Filter" };
+		filterType = new JComboBox(filterNames);
+		filterType.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				calculate(false);
+			}
+		});
+
+		controls.add(load, c);
+		controls.add(noiseType, c);
+		controls.add(noiseLabel, c);
+		controls.add(noiseSlider, c);
+		controls.add(noiseAmountLabel, c);
+		controls.add(filterType, c);
+
+		// images panel
+		JPanel images = new JPanel(new GridLayout(1, 2));
+		images.add(srcView);
+		images.add(dstView);
+
+		// status panel
+		JPanel status = new JPanel(new GridBagLayout());
+
+		status.add(statusLine, c);
+
+		add(controls, BorderLayout.NORTH);
+		add(images, BorderLayout.CENTER);
+		add(status, BorderLayout.SOUTH);
+
+		calculate(true);
+
 	}
-	
+
 	private File openFile() {
-        JFileChooser chooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Images (*.jpg, *.png, *.gif)", "jpg", "png", "gif");
-        chooser.setFileFilter(filter);
-        int ret = chooser.showOpenDialog(this);
-        if(ret == JFileChooser.APPROVE_OPTION) return chooser.getSelectedFile();
-        return null;		
+		JFileChooser chooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(
+				"Images (*.jpg, *.png, *.gif)", "jpg", "png", "gif");
+		chooser.setFileFilter(filter);
+		int ret = chooser.showOpenDialog(this);
+		if (ret == JFileChooser.APPROVE_OPTION)
+			return chooser.getSelectedFile();
+		return null;
 	}
-	
+
 	private void loadFile(File file) {
-		if(file != null) {
-    		srcView.loadImage(file);
-    		srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
-    		// create empty destination image of same size
-    		dstView.resetToSize(srcView.getImgWidth(), srcView.getImgHeight());
-    		frame.pack();
+		if (file != null) {
+			srcView.loadImage(file);
+			srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
+			// create empty destination image of same size
+			dstView.resetToSize(srcView.getImgWidth(), srcView.getImgHeight());
+			frame.pack();
 		}
-		
+
 	}
-	
-    
+
 	private static void createAndShowGUI() {
 		// create and setup the window
 		frame = new JFrame("Ue01_Nachname_Vorname");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
-        JComponent newContentPane = new Ue01_Braun_Keil();
-        newContentPane.setOpaque(true); //content panes must be opaque
-        frame.setContentPane(newContentPane);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // display the window.
-        frame.pack();
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
-        Dimension screenSize = toolkit.getScreenSize();
-        frame.setLocation((screenSize.width - frame.getWidth()) / 2, (screenSize.height - frame.getHeight()) / 2);
-        frame.setVisible(true);
+		JComponent newContentPane = new Ue01_Braun_Keil();
+		newContentPane.setOpaque(true); // content panes must be opaque
+		frame.setContentPane(newContentPane);
+
+		// display the window.
+		frame.pack();
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		Dimension screenSize = toolkit.getScreenSize();
+		frame.setLocation((screenSize.width - frame.getWidth()) / 2,
+				(screenSize.height - frame.getHeight()) / 2);
+		frame.setVisible(true);
 	}
 
 	public static void main(String[] args) {
-        //Schedule a job for the event-dispatching thread:
-        //creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
+		// Schedule a job for the event-dispatching thread:
+		// creating and showing this application's GUI.
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				createAndShowGUI();
+			}
+		});
 	}
-	
+
 	private void calculate(boolean createNoise) {
 		long startTime = System.currentTimeMillis();
-		
-		if(createNoise) {
+
+		if (createNoise) {
 			// start with original image pixels
 			srcView.setPixels(origPixels);
 			// add noise
-			if(addNoise) 
+			if (addNoise)
 				makeNoise(srcView);
 			// make changes visible
 			srcView.applyChanges();
 		}
-		
+
 		// apply filter
 		filter();
 
 		// make changes visible
 		dstView.applyChanges();
-		
+
 		long time = System.currentTimeMillis() - startTime;
-    	statusLine.setText("Processing Time = " + time + " ms");
+		statusLine.setText("Processing Time = " + time + " ms");
 	}
 
-	
 	private void makeGray(ImageView imgView) {
 		int pixels[] = imgView.getPixels();
 		// TODO: convert pixels to grayscale
-		
+
 		// loop over all pixels
-		for(int i = 0; i < pixels.length; i++) {
-			int r = argb_read(pixels[i],16);  
-			int b = argb_read(pixels[i],8);
-			int g =argb_read(pixels[i],0);
-			
-			int grey_value = (r+b+g)/3;
-			
-			pixels[i] = 0xff000000 | (grey_value<<16) | (grey_value<<8) | grey_value;
-			
+		for (int i = 0; i < pixels.length; i++) {
+			int r = argb_read(pixels[i], 16);
+			int b = argb_read(pixels[i], 8);
+			int g = argb_read(pixels[i], 0);
+
+			int grey_value = (r + b + g) / 3;
+
+			pixels[i] = 0xff000000 | (grey_value << 16) | (grey_value << 8)
+					| grey_value;
+
 		}
 	}
-	
+
 	private void makeNoise(ImageView imgView) {
 		int pixels[] = imgView.getPixels();
-		for (int i = 0; i < getCountOfRandomNumber(Math.round(noiseFraction * 100.0), pixels.length); i++){
+		for (int i = 0; i < getCountOfRandomNumber(
+				Math.round(noiseFraction * 100.0), pixels.length); i++) {
 			int pos = getRandomNumber(pixels.length);
-			if (pos % 2 == 0){
-				pixels[pos] = 0xff000000 | (0 <<16) | (0 <<8);
-			}else{
-				pixels[pos] = 0xff000000 | (255 <<16) | (255 <<8) | 255;
+			if (pos % 2 == 0) {
+				pixels[pos] = 0xff000000 | (0 << 16) | (0 << 8);
+			} else {
+				pixels[pos] = 0xff000000 | (255 << 16) | (255 << 8) | 255;
 			}
 		}
 	}
-	
-	private int getRandomNumber(int maxValue){
-		int number = 0 + (int)(Math.random() * ((maxValue - 0) + 1));
+
+	private int getRandomNumber(int maxValue) {
+		int number = 0 + (int) (Math.random() * ((maxValue - 0) + 1));
 		return number;
 	}
-	
-	private int getCountOfRandomNumber(long percent, int length){
+
+	private int getCountOfRandomNumber(long percent, int length) {
 		int pixels = length;
 		int number = (int) (pixels / 100 * percent);
 		return number;
 	}
-	
-	
+
 	private void filter() {
 		int src[] = srcView.getPixels();
 		int dst[] = dstView.getPixels();
 		int width = srcView.getImgWidth();
 		int height = srcView.getImgHeight();
 		int filter = filterType.getSelectedIndex();
-		
-		if (filter == 1){
-			for(int y = 0; y < height; y++) {
-				for(int x = 0; x < width; x++){
-					for (int k = -1; k < 2; k++){
-						for (int l = -1; l < 2; l++){
-							//todo: rechnen...
+
+		if (filter == 1) {
+			for (int y = 0; y < height-1; y++) {
+				for (int x = 0; x < width-1; x++) {
+					long argb[] = new long[10];
+					int n = 0;
+					for (int row = -1; row < 2; row++) {
+						// System.out.println(row);
+						// Schleife Ÿber Spalten des Kerns
+						for (int col = -1; col < 2; col++) {
+							// System.out.println(col);
+
+							if (x != 0 && y != 0 && x != width && y != height) {
+
+								// if (x == 0 && y == 0){
+								// row = row + 1;
+								// col = col + 1;
+								// }
+								// if (x == width && y == 0){
+								// row = row - 1;
+								// col = col + 1;
+								// }
+								// if (x == 0 && y == height){
+								// row = row + 1;
+								// col = col - 1;
+								// }
+								// if (x == width && y == height){
+								// row = row - 1;
+								// col = col - 1;
+								// }
+								// System.out.println(row + " " + col);
+								argb[n] = src[(y + row) * width + (x + col)]; // Lesen
+																				// der
+																				// Originalwerte
+								n++;
+								// System.out.println("width: " + width);
+								// System.out.println((y + row) * width + (x +
+								// col));
+							}
 						}
 					}
+					java.util.Arrays.sort(argb);
+					
+					dst[y * width + x] = (int) argb[0];
+					
 				}
-				
 			}
-			java.util.Arrays.sort(src);
-			
+			dstView.setPixels(dst);
 		}
-		
+		// for(int y = 0; y < height; y++) {
+		// for(int x = 0; x < width; x++){
+		// for (int k = -1; k < 2; k++){
+		// for (int l = -1; l < 2; l++){
+		// if(y)){
+		// pixels[pos] = 0xff000000 | (0 <<16) | (0 <<8);
+		// }
+		// }
+		// }
+		// }
+		//
+		// }
+		// java.util.Arrays.sort(src);
+		//
+		// }
+
 	}
-	
-	private int argb_read(int pixel, int shift_value){
+
+	private int argb_read(int pixel, int shift_value) {
 		int x = (pixel >> shift_value) & 0xff;
-		return x; 
+		return x;
 	}
 }
-
