@@ -270,71 +270,77 @@ public class Ue01_Braun_Keil extends JPanel {
 		int filter = filterType.getSelectedIndex();
 
 		if (filter == 1) {
-			for (int y = 0; y < height-1; y++) {
-				for (int x = 0; x < width-1; x++) {
-					long argb[] = new long[10];
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					//Array zum Speichern der Werte des Kernels
+					long argb[] = new long[9];
+					//Variable fuer die Platzierung der Werte im Array
 					int n = 0;
 					for (int row = -1; row < 2; row++) {
-						// System.out.println(row);
-						// Schleife Ÿber Spalten des Kerns
 						for (int col = -1; col < 2; col++) {
-							// System.out.println(col);
+							//Werte werden erstmal ohne Randbehandlung eingelesen
+							if (x != 0 && y != 0 && x != width-1 && y != height-1) {
 
-							if (x != 0 && y != 0 && x != width && y != height) {
-
-								// if (x == 0 && y == 0){
-								// row = row + 1;
-								// col = col + 1;
-								// }
-								// if (x == width && y == 0){
-								// row = row - 1;
-								// col = col + 1;
-								// }
-								// if (x == 0 && y == height){
-								// row = row + 1;
-								// col = col - 1;
-								// }
-								// if (x == width && y == height){
-								// row = row - 1;
-								// col = col - 1;
-								// }
-								// System.out.println(row + " " + col);
-								argb[n] = src[(y + row) * width + (x + col)]; // Lesen
-																				// der
-																				// Originalwerte
+								argb[n] = src[(y + row) * width + (x + col)]; // Lesen der Originalwerte
 								n++;
-								// System.out.println("width: " + width);
-								// System.out.println((y + row) * width + (x +
-								// col));
 							}
 						}
+						//Array sortieren
+						java.util.Arrays.sort(argb);
+						//Zugriff auf kleinsten Wert
+						dst[y * width + x] = (int) argb[0];
 					}
-					java.util.Arrays.sort(argb);
-					
-					dst[y * width + x] = (int) argb[0];
-					
+					border_treatment(x, y, width, height, dst);
 				}
+				//Bild fuer rechte Spalte laden
+				dstView.setPixels(dst);
 			}
-			dstView.setPixels(dst);
 		}
-		// for(int y = 0; y < height; y++) {
-		// for(int x = 0; x < width; x++){
-		// for (int k = -1; k < 2; k++){
-		// for (int l = -1; l < 2; l++){
-		// if(y)){
-		// pixels[pos] = 0xff000000 | (0 <<16) | (0 <<8);
-		// }
-		// }
-		// }
-		// }
-		//
-		// }
-		// java.util.Arrays.sort(src);
-		//
-		// }
+		if (filter == 2){
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					long argb[] = new long[9];
+					int n = 0;
+					for (int row = -1; row < 2; row++) {
+						for (int col = -1; col < 2; col++) {
 
+							if (x != 0 && y != 0 && x != width-1 && y != height-1) {
+
+								argb[n] = src[(y + row) * width + (x + col)]; // Lesen der Originalwerte
+								n++;
+							}
+						}
+						java.util.Arrays.sort(argb);
+						//Zugriff auf höchsten Wert
+						dst[y * width + x] = (int) argb[argb.length - 1];
+					}
+					border_treatment(x, y, width, height, dst);
+				}
+				dstView.setPixels(dst);
+			}
+	
+		}
 	}
-
+	
+	private void border_treatment(int x, int y, int width, int height, int[] dst){
+		//funktioniert
+		if (x == width-1){
+			dst[y*width+x] = dst[y * width +x-2];
+		}
+		//funktioniert
+		if(y == height -1){
+			dst[y*width+x] = dst[(y-1) * width +x];
+		}
+		//funktioniert nicht
+		if(x == 0){
+			dst[y*width+x] = dst[y*width+(x+1)];
+		}
+		//funktioniert nicht
+		if(y == 0){
+			dst[y*width+x] = dst[(y+1)*width+(x)];
+		}
+	}
+	
 	private int argb_read(int pixel, int shift_value) {
 		int x = (pixel >> shift_value) & 0xff;
 		return x;
