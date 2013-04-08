@@ -296,7 +296,7 @@ public class Ue01_Braun_Keil extends JPanel {
 				dstView.setPixels(dst);
 			}
 		}
-<<<<<<< HEAD
+		
 		if (filter == 2){
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
@@ -304,7 +304,23 @@ public class Ue01_Braun_Keil extends JPanel {
 					int n = 0;
 					for (int row = -1; row < 2; row++) {
 						for (int col = -1; col < 2; col++) {
-=======
+							if (x != 0 && y != 0 && x != width-1 && y != height-1) {
+
+								argb[n] = src[(y + row) * width + (x + col)]; // Lesen der Originalwerte
+								n++;
+							}
+						}
+						java.util.Arrays.sort(argb);
+						//Zugriff auf höchsten Wert
+						dst[y * width + x] = (int) argb[argb.length - 1];
+					}
+					border_treatment(x, y, width, height, dst);
+				}
+				dstView.setPixels(dst);
+			}
+	
+		}
+
 		
 		
 		if (filter == 4) {
@@ -332,42 +348,10 @@ public class Ue01_Braun_Keil extends JPanel {
 			}
 			dstView.setPixels(dst);
 		}
-		
-		// for(int y = 0; y < height; y++) {
-		// for(int x = 0; x < width; x++){
-		// for (int k = -1; k < 2; k++){
-		// for (int l = -1; l < 2; l++){
-		// if(y)){
-		// pixels[pos] = 0xff000000 | (0 <<16) | (0 <<8);
-		// }
-		// }
-		// }
-		// }
-		//
-		// }
-		// java.util.Arrays.sort(src);
-		//
-		// }
->>>>>>> 21c66e17354f1404fbeaf2ef3a4c22deb5661668
-
-							if (x != 0 && y != 0 && x != width-1 && y != height-1) {
-
-								argb[n] = src[(y + row) * width + (x + col)]; // Lesen der Originalwerte
-								n++;
-							}
-						}
-						java.util.Arrays.sort(argb);
-						//Zugriff auf höchsten Wert
-						dst[y * width + x] = (int) argb[argb.length - 1];
-					}
-					border_treatment(x, y, width, height, dst);
-				}
-				dstView.setPixels(dst);
-			}
-	
-		}
 	}
-	
+		
+
+								
 	private void border_treatment(int x, int y, int width, int height, int[] dst){
 		//funktioniert
 		if (x == width-1){
