@@ -320,6 +320,44 @@ public class Ue01_Braun_Keil extends JPanel {
 			}
 	
 		}
+		
+		
+		if (filter == 3) {
+			
+			for (int y = 0; y < height-1; y++) {
+				for (int x = 0; x < width-1; x++) {
+					int argb= 0;
+					int r = 0;
+					int g = 0;
+					int b = 0;
+					
+					// 3x3 Kernel
+					for (int row = -1; row < 2; row++) {
+						for (int col = -1; col < 2; col++) {
+							// edge handling
+							if (x != 0 && y != 0 && x != width && y != height) {
+								
+								argb = origPixels[(y + row) * width + (x + col)]; // Lesen der Originalwerte
+																
+								 r += (int) (1/9f * argb_read(argb,16));
+
+								 g += (int) (1/9f * argb_read(argb,8));
+
+								 b += (int) (1/9f * argb_read(argb,0));
+
+							}
+						}
+					}
+					
+					dst[y * width + x] = (0xFF << 24) | (r << 16) | (g << 8)
+							| b; 
+				}
+
+			}
+			dstView.setPixels(dst);
+		}
+	
+		
 
 		
 		
