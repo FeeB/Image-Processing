@@ -268,8 +268,17 @@ public class Ue01_Braun_Keil extends JPanel {
 		int width = srcView.getImgWidth();
 		int height = srcView.getImgHeight();
 		int filter = filterType.getSelectedIndex();
+		
+		if (filter == 0){
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					dst[y * width + x] = src[y*width+x];
+				}
+			}
+		}
 
 		if (filter == 1) {
+			
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
 					//Array zum Speichern der Werte des Kernels
