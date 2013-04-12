@@ -336,7 +336,7 @@ public class Ue01_Braun_Keil extends JPanel {
 							// edge handling
 							if (x != 0 && y != 0 && x != width && y != height) {
 								
-								argb = origPixels[(y + row) * width + (x + col)]; // Lesen der Originalwerte
+								argb = src[(y + row) * width + (x + col)]; // Lesen der Originalwerte
 																
 								 r += (int) (1/9f * argb_read(argb,16));
 
