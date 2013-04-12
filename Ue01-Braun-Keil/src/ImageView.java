@@ -59,7 +59,7 @@ public class ImageView extends JScrollPane{
 
 	public int getImgHeight() {
 		return screen.image.getHeight();
-	}
+	} 
 	
 	public void resetToSize(int width, int height) {
 		// resize image and erase all content
