@@ -323,7 +323,6 @@ public class Ue01_Braun_Keil extends JPanel {
 		
 		
 		if (filter == 3) {
-			
 			for (int y = 0; y < height-1; y++) {
 				for (int x = 0; x < width-1; x++) {
 					int argb= 0;
@@ -347,14 +346,12 @@ public class Ue01_Braun_Keil extends JPanel {
 
 							}
 						}
+						dst[y * width + x] = (0xFF << 24) | (r << 16) | (g << 8)| b; 
 					}
-					
-					dst[y * width + x] = (0xFF << 24) | (r << 16) | (g << 8)
-							| b; 
+					border_treatment(x, y, width, height, dst);
 				}
-
+				dstView.setPixels(dst);
 			}
-			dstView.setPixels(dst);
 		}
 	
 		
@@ -378,13 +375,14 @@ public class Ue01_Braun_Keil extends JPanel {
 								n++;
 							}
 						}
+						java.util.Arrays.sort(argb);
+						// set the median value
+						dst[y * width + x] = (int) argb[4];
 					}
-					java.util.Arrays.sort(argb);
-					// set the median value
-					dst[y * width + x] = (int) argb[4];
+					border_treatment(x, y, width, height, dst);
 				}
+				dstView.setPixels(dst);
 			}
-			dstView.setPixels(dst);
 		}
 	}
 		
