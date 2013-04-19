@@ -40,6 +40,8 @@ public class Rotate extends JPanel {
 	private JSlider angleSlider; // the selected rotation angle
 	private JLabel statusLine; // to print some status text
 	private double angle = 0.0; // current rotation angle in degrees
+	
+
 
 	/**
 	 * Constructor. Constructs the layout of the GUI components and loads the
@@ -275,13 +277,20 @@ public class Rotate extends JPanel {
 		int dstWidth = dstView.getImgWidth();
 		int dstHeight = dstView.getImgHeight();
 		int diagonale = getDiagonale(srcWidth, srcHeight);
+		double cos = 0;
+		double sin = 0;
+		double inversTranslationX = srcWidth/2.0;
+		double inversTranslationY = srcHeight/2.0;
+
 
 		long startTime = System.currentTimeMillis();
 
 		switch (methodList.getSelectedIndex()) {
 		case 0: // Nearest Neigbour
+			cos = Math.cos(Math.toRadians(angle));
+			sin = Math.sin(Math.toRadians(angle));
 			rotateNearestNeigbour(srcPixels, srcWidth, srcHeight, dstPixels,
-					dstWidth, dstHeight, diagonale);
+					dstWidth, dstHeight, diagonale,cos,sin,inversTranslationX,inversTranslationY);
 			break;
 		case 1: // Bilinear Interpolation
 			rotateBilinear(srcPixels, srcWidth, srcHeight, dstPixels, dstWidth,
@@ -316,13 +325,7 @@ public class Rotate extends JPanel {
 	 *            - destination image height
 	 */
 	void rotateNearestNeigbour(int srcPixels[], int srcWidth, int srcHeight,
-			int dstPixels[], int dstWidth, int dstHeight, int diagonale) {
-
-		double cos = Math.cos(Math.toRadians(angle));
-		double sin = Math.sin(Math.toRadians(angle));
-		
-		double inversTranslationX = srcWidth/2.0;
-		double inversTranslationY = srcHeight/2.0;
+			int dstPixels[], int dstWidth, int dstHeight, int diagonale,double cos,double sin,double inversTranslationX,double inversTranslationY) {
 		double translationX = 0;
 		double translationY = 0;
 		int valueX = 0;
