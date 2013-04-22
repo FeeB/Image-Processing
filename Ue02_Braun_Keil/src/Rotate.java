@@ -290,11 +290,13 @@ public class Rotate extends JPanel {
 			cos = Math.cos(Math.toRadians(angle));
 			sin = Math.sin(Math.toRadians(angle));
 			rotateNearestNeigbour(srcPixels, srcWidth, srcHeight, dstPixels,
-					dstWidth, dstHeight, diagonale,cos,sin,inversTranslationX,inversTranslationY);
+					dstWidth, dstHeight, diagonale, cos, sin, inversTranslationX, inversTranslationY);
 			break;
 		case 1: // Bilinear Interpolation
-			rotateBilinear(srcPixels, srcWidth, srcHeight, dstPixels, dstWidth,
-					dstHeight);
+			cos = Math.cos(Math.toRadians(angle));
+			sin = Math.sin(Math.toRadians(angle));
+			rotateBilinear(srcPixels, srcWidth, srcHeight, dstPixels,
+					dstWidth, dstHeight, diagonale, cos, sin, inversTranslationX, inversTranslationY);
 			break;
 		}
 
@@ -366,10 +368,101 @@ public class Rotate extends JPanel {
 	 *            - destination image height
 	 */
 	void rotateBilinear(int srcPixels[], int srcWidth, int srcHeight,
-			int dstPixels[], int dstWidth, int dstHeight) {
+			int dstPixels[], int dstWidth, int dstHeight, int diagonale,double cos,double sin,double inversTranslationX,double inversTranslationY) {
+		
+		double translationX = 0;
+		double translationY = 0;
+		int valueX = 0;
+		int valueY = 0;
+		for (int y = 0; y < dstHeight; y++) {
+			for (int x = 0; x < dstWidth; x++) {
+				
+				translationX = x - diagonale / 2.0;
+				translationY = y - diagonale / 2.0;
+				valueX = (int) Math.round(cos * translationX + sin * translationY + inversTranslationX);
+				System.out.println(valueX);
+				valueY = (int) Math.round(-sin * translationX + cos * translationY + inversTranslationY);
+				
+				//wei§er Rahmen
+				if (valueX < 0 || valueX >= srcWidth || valueY < 0 || valueY >= srcHeight){
+					dstPixels[y*dstWidth+x] = 0xffffffff;
+				}
+				//Bildbehandlung
+				else{
+					int argb;
+					int pos = (int) ((valueY) * srcWidth + (valueX));	
+					if (pos < 0){
+						 argb = 0xffffffff;
+					}else if (pos >= (srcWidth * srcHeight)){
+						argb = 0xffffffff;
+					}else{
+						argb = srcPixels[pos]; // Lesen der R,G,B-Werte
+					}
+					int r1 = (argb >> 16) & 0xff;
+					int g1 = (argb >> 8) & 0xff;
+					int b1 = argb & 0xff;
 
-		/**** TODO: your implementation goes here ****/
+					pos = (int) ((valueY) * srcWidth + (valueX + 1));	
+					if (pos < 0){
+						 argb = 0xffffffff;
+					}else if (pos >= (srcWidth * srcHeight)){
+						argb = 0xffffffff;
+					}else{
+						argb = srcPixels[pos]; // Lesen der R,G,B-Werte
+					}
+					int r2 = (argb >> 16) & 0xff;
+					int g2 = (argb >> 8) & 0xff;
+					int b2 = argb & 0xff;
 
+					pos = (int) ((valueY + 1) * srcWidth + (valueX));	
+					if (pos < 0){
+						 argb = 0xffffffff;
+					}else if (pos >= (srcWidth * srcHeight)){
+						argb = 0xffffffff;
+					}else{
+						argb = srcPixels[pos]; // Lesen der R,G,B-Werte
+					}
+					int r3 = (argb >> 16) & 0xff;
+					int g3 = (argb >> 8) & 0xff;
+					int b3 = argb & 0xff;
+
+					pos = (int) ((valueY + 1) * srcWidth + (valueX + 1));	
+					if (pos < 0){
+						 argb = 0xffffffff;
+					}else if (pos >= (srcWidth * srcHeight)){
+						argb = 0xffffffff;
+					}else{
+						argb = srcPixels[pos]; // Lesen der R,G,B-Werte
+					}
+					int r4 = (argb >> 16) & 0xff;
+					int g4 = (argb >> 8) & 0xff;
+					int b4 = argb & 0xff;
+					
+//					System.out.println("h: " +  (cos * translationX + sin * translationY + inversTranslationX * x));
+//					System.out.println("v: " + (-sin * translationX + cos * translationY + inversTranslationY * y));
+					
+					double h = ((cos * translationX + sin * translationY + inversTranslationX * x) % 1);
+					double v = ((-sin * translationX + cos * translationY + inversTranslationY * y) % 1);
+
+					// Berchnung der Bildpunkte an nicht ganzzahligen Pos., entsprechend der Gewichtung
+					int r = (int) (r1 * (1 - h) * (1 - v) + r2 * h * (1 - v) + r3 * (1 - h) * v + r4 * h * v);
+					int g = (int) (g1 * (1 - h) * (1 - v) + g2 * h * (1 - v) + g3 * (1 - h) * v + g4 * h * v);
+					int b = (int) (b1 * (1 - h) * (1 - v) + b2 * h * (1 - v) + b3 * (1 - h) * v + b4 * h * v);
+					
+
+					int pos_n = y * dstWidth + x;
+
+
+					dstPixels[pos_n] = (0xFF << 24) | (r << 16) | (g << 8) | b;
+				}
+			}
+		}
 	}
+
+
+				
+
+				
+//	
 
 }
