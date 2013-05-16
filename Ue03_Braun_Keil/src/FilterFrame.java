@@ -50,7 +50,7 @@ public class FilterFrame extends JPanel {
 				if (input != null) {
 					srcView.loadImage(input);
 					srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
-					makeBinary(srcView);
+					makeBinary(makeGray(srcView));
 					srcView.applyChanges();
 				}
 			}
@@ -67,13 +67,13 @@ public class FilterFrame extends JPanel {
 			public void stateChanged(ChangeEvent e) {
 				thresholdValue = thresholdSlider.getValue();
 				srcView.setPixels(origPixels);
-				makeBinary(srcView);
+				makeBinary(makeGray(srcView));
 				srcView.applyChanges();
 			}
 		});
 		
 		// slider for filter
-				final JSlider filterSlider = new JSlider(-500, 500, 0);
+				final JSlider filterSlider = new JSlider(-50, 50, 0);
 				filterSlider.setBorder(BorderFactory
 						.createTitledBorder("Filter"));
 				filterSlider.setMajorTickSpacing(100);
@@ -174,5 +174,24 @@ public class FilterFrame extends JPanel {
 	private int argb_read(int pixel, int shift_value) {
 		int x = (pixel >> shift_value) & 0xff;
 		return x;
+	}
+	
+	private ImageView makeGray(ImageView imgView) {
+		int pixels[] = imgView.getPixels();
+		// TODO: convert pixels to grayscale
+
+		// loop over all pixels
+		for (int i = 0; i < pixels.length; i++) {
+			int r = argb_read(pixels[i], 16);
+			int b = argb_read(pixels[i], 8);
+			int g = argb_read(pixels[i], 0);
+
+			int grey_value = (r + b + g) / 3;
+
+			pixels[i] = 0xff000000 | (grey_value << 16) | (grey_value << 8)
+					| grey_value;
+
+		}
+		return imgView;
 	}
 }
