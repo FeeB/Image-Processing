@@ -42,10 +42,6 @@ public class FilterFrame extends JPanel {
 		makeBinary(srcView);
 		srcView.applyChanges();
 
-		// create empty destination image of same size
-		dstView = new ImageView(srcView.getImgWidth(), srcView.getImgHeight());
-		dstView.setMaxSize(new Dimension(maxWidth, maxHeight));
-
 		// load image button
 		JButton load = new JButton("Open Image");
 		load.addActionListener(new ActionListener() {
@@ -56,9 +52,6 @@ public class FilterFrame extends JPanel {
 					srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
 					makeBinary(srcView);
 					srcView.applyChanges();
-					dstView = new ImageView(srcView.getImgWidth(), srcView
-							.getImgHeight());
-					dstView.setMaxSize(new Dimension(maxWidth, maxHeight));
 				}
 			}
 		});
@@ -106,7 +99,6 @@ public class FilterFrame extends JPanel {
 		// arrange images
 		JPanel images = new JPanel();
 		images.add(srcView);
-		images.add(dstView);
 
 		// add to main panel
 		add(controls, BorderLayout.NORTH);
