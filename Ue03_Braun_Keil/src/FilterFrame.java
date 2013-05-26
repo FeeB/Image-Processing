@@ -21,7 +21,6 @@ public class FilterFrame extends JPanel {
 
 	private ImageView srcView = null; // source image view
 	private ImageView dstView = null; // final image view
-	private ImageView bwView = null; // BW Image
 	private ImageView tmpView = null; // nach Filter1
 
 	private JLabel statusLine; // to print some status text
@@ -44,13 +43,12 @@ public class FilterFrame extends JPanel {
 		srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
 		origPixels = srcView.getPixels().clone();
 		dstView = new ImageView(srcView.getImgWidth(), srcView.getImgHeight());
-		bwView = new ImageView(srcView.getImgWidth(), srcView.getImgHeight());
 		tmpView = new ImageView(srcView.getImgWidth(), srcView.getImgHeight());
 	
 
 	//	 convert to gray;binary
 		makeBinary(makeGray(srcView));
-		dilation(bwView, tmpView, radius);
+		dilation(srcView, tmpView, radius);
 		dilation(tmpView, dstView, secondRadius);
 
 		// load image button
@@ -64,12 +62,12 @@ public class FilterFrame extends JPanel {
 					origPixels = srcView.getPixels().clone();
 					dstView.setSize(srcView.getImgWidth(),
 							srcView.getImgHeight());
-					bwView.setSize(srcView.getImgWidth(),
+					srcView.setSize(srcView.getImgWidth(),
 							srcView.getImgHeight());
 					tmpView.setSize(srcView.getImgWidth(),
 							srcView.getImgHeight());
 					makeBinary(makeGray(srcView));
-					dilation(bwView, tmpView, radius);
+					dilation(srcView, tmpView, radius);
 					dilation(tmpView, dstView, secondRadius);
 				}
 			}
@@ -87,7 +85,7 @@ public class FilterFrame extends JPanel {
 				thresholdValue = thresholdSlider.getValue();
 				srcView.setPixels(origPixels);
 				makeBinary(makeGray(srcView));
-				dilation(bwView, tmpView, radius);
+				dilation(srcView, tmpView, radius);
 				dilation(tmpView, dstView, secondRadius);
 			}
 		});
@@ -102,14 +100,14 @@ public class FilterFrame extends JPanel {
 			
 			public void stateChanged(ChangeEvent e) {
 				radius = filterSlider.getValue() / 10.0f;
-				if (filterSlider.getValue() >= 0) {
-					dilation(bwView, tmpView, radius);
+				if (filterSlider.getValue() > 0) {
+					dilation(srcView, tmpView, radius);
 				} else {
 					// invert(I)+invert(H)
-					invertBinaryImage(bwView);
-					dilation(bwView, tmpView, -radius);
+					invertBinaryImage(srcView);
+					dilation(srcView, tmpView, -radius);
 					
-					invertBinaryImage(bwView);
+					invertBinaryImage(srcView);
 					invertBinaryImage(tmpView);
 				}
 				dilation(tmpView, dstView, secondRadius);
@@ -127,14 +125,15 @@ public class FilterFrame extends JPanel {
 		filterSliderSecond.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				secondRadius = filterSliderSecond.getValue() / 10.0f;
-				if (filterSliderSecond.getValue() >= 0) {
-					dilation(bwView, tmpView, secondRadius);
+
+				if (filterSliderSecond.getValue() > 0) {
+					dilation(srcView, tmpView, secondRadius);
 				
 				} else {
-					invertBinaryImage(bwView);
-					dilation(bwView, tmpView, -secondRadius);
+					invertBinaryImage(srcView);
+					dilation(srcView, tmpView, -secondRadius);
 					
-					invertBinaryImage(bwView);
+					invertBinaryImage(srcView);
 					invertBinaryImage(tmpView);
 					dilation(tmpView, dstView, radius);
 				}
@@ -172,7 +171,7 @@ public class FilterFrame extends JPanel {
 
 	private static void createAndShowGUI() {
 		// create and setup the window
-		frame = new JFrame("Rotation - " + author);
+		frame = new JFrame("Morphi - " + author);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		JComponent contentPane = new FilterFrame();
@@ -212,7 +211,7 @@ public class FilterFrame extends JPanel {
 
 	private void makeBinary(ImageView imgView) {
 		int srcPixels[] = imgView.getPixels();
-		int[] bwArray = bwView.getPixels();
+		int[] bwArray = srcView.getPixels();
 
 		for (int i = 0; i < srcPixels.length; i++) {
 			int r = giveBackValuePixel(argb_read(srcPixels[i], 16));
@@ -224,7 +223,7 @@ public class FilterFrame extends JPanel {
 			bwArray[i] = 0xff000000 | (r << 16) | (g << 8) | b;
 
 		}
-		bwView.applyChanges();
+		srcView.applyChanges();
 		return;
 	}
 
@@ -274,13 +273,10 @@ public class FilterFrame extends JPanel {
 
 		for (int y = 0; y < srcView.getImgHeight(); y++) {
 			for (int x = 0; x < srcView.getImgWidth(); x++) {
-				// if (y >= 0 && y < srcView.getImgHeight() && x >= 0 && x <
-				// srcView.getImgWidth())
-				// {
+
 				if (srcArray[y * dstView.getImgWidth() + x] == 0xff000000) {
 					makeNeighbourhoodBlack(dstView, radius, y, x);
 				}
-				// }
 			}
 		}
 		dstView.applyChanges();
@@ -290,7 +286,6 @@ public class FilterFrame extends JPanel {
 			int mittelpunktY, int mittelpunktX) {
 		int[] dstArray = dstView.getPixels();
 		int d = Math.round(radius);
-		// System.out.println(d);
 		for (int y = mittelpunktY - d; y <= mittelpunktY + d; y++) {
 			for (int x = mittelpunktX - d; x <= mittelpunktX + d; x++) {
 				if (x >= 0 && y >= 0 && x < dstView.getImgWidth()
