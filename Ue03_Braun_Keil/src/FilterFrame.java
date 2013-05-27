@@ -274,7 +274,7 @@ public class FilterFrame extends JPanel {
 		for (int y = 0; y < srcView.getImgHeight(); y++) {
 			for (int x = 0; x < srcView.getImgWidth(); x++) {
 
-				if (srcArray[y * dstView.getImgWidth() + x] == 0xff000000) {
+				if (srcArray[y * srcView.getImgWidth() + x] == 0xff000000) {
 					makeNeighbourhoodBlack(dstView, radius, y, x);
 				}
 			}
