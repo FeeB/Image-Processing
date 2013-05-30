@@ -3,9 +3,13 @@
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import com.sun.tools.javac.code.Attribute.Array;
+
 import java.awt.event.*;
 import java.awt.*;
 import java.io.File;
+import java.util.Arrays;
 
 public class Histo extends JPanel {
 	
@@ -26,7 +30,7 @@ public class Histo extends JPanel {
 	//
 	private ImageView imgView;					// image view
 	private ImageView histoView;				// histogram view
-	private int [] copyView;					// Screen View
+	private int [] copyView;
 	private JLabel[]  label = new JLabel[8];	// text display
 
 	// internal status
@@ -209,8 +213,7 @@ public class Histo extends JPanel {
 		
 		// some dummy operation
 		updateCount++;
-		drawCircle();
-		
+		drawHist();		
 		updateText();
 	}
 	
@@ -264,14 +267,48 @@ public class Histo extends JPanel {
 		histoView.applyChanges();
 	}
 	// liest die häufigeiten der werte zw.0 -255 aus copyview und erstellt frequency table
+	
 	private void readFrequencies(){
 		for (int i=0;i<copyView.length;i++){
 
 			frequency[argb_read(copyView[i],0)]+=1;
 			
 		}
-		System.out.println(frequency[255]);
+		
 	}
-
+	void drawHist() {
+		int pixels[] = histoView.getPixels();	
+		int width = histoView.getImgWidth();
+		int height = histoView.getImgHeight();
+		
+		double factor=heightProp(histoView.getImgHeight());
+		
+		for (int x=0; x< width;x++){
+			
+			double frequencyWithFactor =(frequency[x]*factor);
+			
+			//int yfacotor=(int()(height-height*factor);
+			for (int y=height-1;y>=0;y--){
+				int pos = ((height-1)-y)*width+x;
+				if(y>=frequencyWithFactor){
+				pixels[pos] = 0xff000000;	// black
+				}else{
+					pixels[pos] = 0xff008100;//green
+				}
+				}	
+			}
+			//	System.out.println(y);
+		
+		histoView.applyChanges();
+	}
+	private double heightProp(int height){
+		int[] frequencyArray=frequency;
+		Arrays.sort(frequencyArray);
+		double x= frequencyArray[frequencyArray.length-1];
+		double heightProp= height/x;
+		System.out.println(x);
+		return heightProp;
+		
+	}
 }
     
