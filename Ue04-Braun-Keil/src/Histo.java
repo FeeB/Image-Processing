@@ -212,7 +212,7 @@ public class Histo extends JPanel {
 		
 		imgView.applyChanges();
 		
-		updateHistogram();
+		drawHist();
 	}
 	
 	public void changeContrast(int contrast){
@@ -249,7 +249,7 @@ public class Histo extends JPanel {
 		}
 		imgView.applyChanges();
 		
-		updateHistogram();
+		drawHist();
 	}
     
 	private int limitPixel(int pixel){
@@ -274,10 +274,12 @@ public class Histo extends JPanel {
 	private void updateText() {
 		int[] histoArray = histoView.getPixels();
 		Arrays.sort(histoArray);
-		String maximum = "Max: " + argb_read(histoArray[histoArray.length-1], 0);
-		String minimum = "Min: " + argb_read(histoArray[0], 0);
+		String maximum = "Max: " + argb_read(histoArray[histoArray.length-1], 16);
+		System.out.println(histoArray[histoArray.length-1]);
+		System.out.println(argb_read(histoArray[histoArray.length-1],16));
+		String minimum = "Min: " + argb_read(histoArray[0], 16);
 		String average = "Average: " + average(histoArray);
-		String median = "Median: " + argb_read(histoArray[histoArray.length/2], 0);
+		String median = "Median: " + argb_read(histoArray[histoArray.length/2], 16);
 		
 		label[0].setText(maximum);
 		label[1].setText(minimum);
@@ -305,38 +307,40 @@ public class Histo extends JPanel {
 		return Double.toString(x);
 	}
 
-	void drawCircle() {
-		int pixels[] = histoView.getPixels();
-		
-		int width = histoView.getImgWidth();
-		int height = histoView.getImgHeight();
-		
-		int xCenter = width/2;
-		int yCenter = height/2;
-		
-		int squareRadius = radius*radius;
-		
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int squareR = ((yCenter-y)*(yCenter-y)+(xCenter-x)*(xCenter-x));
-				
-				int pos = y*width+x;
-				
-				if (squareR < squareRadius )
-					pixels[pos] = 0xff008100;	// dark green
-				else
-					pixels[pos] = 0xff000000;	// black
-			}
-		}
-		
-		histoView.applyChanges();
-	}
+//	void drawCircle() {
+//		int pixels[] = histoView.getPixels();
+//		
+//		int width = histoView.getImgWidth();
+//		int height = histoView.getImgHeight();
+//		
+//		int xCenter = width/2;
+//		int yCenter = height/2;
+//		
+//		int squareRadius = radius*radius;
+//		
+//		for (int y = 0; y < height; y++) {
+//			for (int x = 0; x < width; x++) {
+//				int squareR = ((yCenter-y)*(yCenter-y)+(xCenter-x)*(xCenter-x));
+//				
+//				int pos = y*width+x;
+//				
+//				if (squareR < squareRadius )
+//					pixels[pos] = 0xff008100;	// dark green
+//				else
+//					pixels[pos] = 0xff000000;	// black
+//			}
+//		}
+//		
+//		histoView.applyChanges();
+//	}
 	// liest die hŠufigeiten der werte zw.0 -255 aus copyview und erstellt frequency table
 	
 	private void readFrequencies(){
-		for (int i=0;i<copyView.length;i++){
+		int[] pixelsOfCurrentImage = imgView.getPixels();
+		
+		for (int i=0;i<pixelsOfCurrentImage.length;i++){
 
-			frequency[argb_read(copyView[i],0)]+=1;
+			frequency[argb_read(pixelsOfCurrentImage[i],0)]+=1;
 			
 		}
 		
@@ -365,13 +369,15 @@ public class Histo extends JPanel {
 			//	System.out.println(y);
 		
 		histoView.applyChanges();
+		updateText();
 	}
 	private double heightProp(int height){
-		int[] frequencyArray=frequency;
+		int[] frequencyArray = frequency.clone();
 		Arrays.sort(frequencyArray);
 		double x= frequencyArray[frequencyArray.length-1];
 		double heightProp= height/x;
 		System.out.println(x);
+		System.out.println(heightProp);
 		return heightProp;
 		
 	}
