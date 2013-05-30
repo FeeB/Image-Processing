@@ -33,11 +33,7 @@ public class Histo extends JPanel {
 	private ImageView imgView;					// image view
 	private ImageView histoView;				// histogram view
 	private int [] copyView;
-<<<<<<< HEAD
-	private JLabel[]  label = new JLabel[8];	// text display
-=======
 	private JLabel[]  label = new JLabel[6];	// text display
->>>>>>> 6fad195cd088dfaf7f84c8ea66aa3bf83f0f0fb7
 
 	// internal status
 	//
