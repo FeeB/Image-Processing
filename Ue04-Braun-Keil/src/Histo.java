@@ -2,6 +2,8 @@
 // Prof. K. Jung
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.sun.tools.javac.code.Attribute.Array;
@@ -31,7 +33,11 @@ public class Histo extends JPanel {
 	private ImageView imgView;					// image view
 	private ImageView histoView;				// histogram view
 	private int [] copyView;
+<<<<<<< HEAD
 	private JLabel[]  label = new JLabel[8];	// text display
+=======
+	private JLabel[]  label = new JLabel[6];	// text display
+>>>>>>> 6fad195cd088dfaf7f84c8ea66aa3bf83f0f0fb7
 
 	// internal status
 	//
@@ -74,30 +80,35 @@ public class Histo extends JPanel {
         // text display
         JPanel controlPanel = new JPanel(new GridLayout(5, 2));
         
-    	String[] string = {"Text 1", "Text 2", "Text 3", "Text 4", 
-                           "Text 5", "Text 6", "Text 7", "Text 8"};
+        String[] string = {"Min: ", "Max: ", "Mittelwert: ", "Varianz: ", 
+                "Median: ", "Entropie: "};
 
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < 6; i++) {
 			label[i] = new JLabel(string[i]);
 			controlPanel.add(label[i]);
 		}
-		
-		// buttons
-		JButton darkerButton = new JButton("decrease brightness");
-		darkerButton.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		changeBrightness(-10);
-        	}        	
-        });
-		controlPanel.add(darkerButton);
-
-		JButton enlightButton = new JButton("increase brightness");
-		enlightButton.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		changeBrightness(10);
-        	}        	
-        });
-		controlPanel.add(enlightButton);
+        
+//      Slider HelligkeitsŠnderung
+      final JSlider brightnessSlider = new JSlider(-255, 255, 0);
+      brightnessSlider.addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				changeBrightness(brightnessSlider.getValue());
+			}
+		});
+      controlPanel.add(brightnessSlider);
+      
+//    Slider KontrastŠnderung
+    final JSlider contrastSlider = new JSlider(0, 100, 0);
+    contrastSlider.addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				changeContrast(contrastSlider.getValue());
+			}
+		});
+    controlPanel.add(contrastSlider);
 		
         JPanel images = new JPanel(new FlowLayout());
         images.add(imgView);
@@ -182,7 +193,7 @@ public class Histo extends JPanel {
 		
 		radius += delta > 0 ? 1 : -1;	// some dummy operation
 		
-		int pixels[] = imgView.getPixels();
+		int pixels[] = copyView;
 		
 		for (int pos = 0; pos < pixels.length; pos++) {
 			
@@ -200,14 +211,61 @@ public class Histo extends JPanel {
 			b 	+= delta;
 			
 			// restore pixel
-			pixels[pos] = 0xFF000000 + ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);			
+			imgView.pixels[pos] = 0xFF000000 + ((limitPixel(r) & 0xff) << 16) + ((limitPixel(g) & 0xff) << 8) + (limitPixel(b) & 0xff);			
 		}
 		
 		imgView.applyChanges();
 		
 		updateHistogram();
 	}
+	
+	public void changeContrast(int contrast){
+		double schwellenwert = 255 / 2;
+		
+		int pixels[] = copyView;
+		
+		for (int pos = 0; pos < pixels.length; pos++) {
+			int c 	= pixels[pos];
+			
+			// get RGB values
+			int r 	= (c & 0xff0000) >> 16;
+			int g 	= (c & 0x00ff00) >> 8;
+			int b 	= (c & 0x0000ff);
+			
+			if (r < schwellenwert) {
+				r = (int) (r - contrast);
+			}else if (r > schwellenwert) {
+				 r = (int) (r + contrast);
+			}
+			
+			if (g < schwellenwert) {
+				g = (int) (g - contrast);
+			}else if (g > schwellenwert) {
+				 g = (int) (g + contrast);
+			}
+			
+			if (b < schwellenwert) {
+				b = (int) (b - contrast);
+			}else if (g > schwellenwert) {
+				b = (int) (b + contrast);
+			}
+			imgView.pixels[pos] = 0xFF000000 + ((limitPixel(r) & 0xff) << 16) + ((limitPixel(g) & 0xff) << 8) + (limitPixel(b) & 0xff);
+		}
+		imgView.applyChanges();
+		
+		updateHistogram();
+	}
     
+	private int limitPixel(int pixel){
+		if (pixel > 255){
+			return pixel = 255;
+		}else if (pixel < 0){
+			return pixel = 0;
+		}else{
+			return pixel;
+		}
+	}
+	
 	private void updateHistogram() {
 		// ToDo: draw the histogram
 		
@@ -218,16 +276,27 @@ public class Histo extends JPanel {
 	}
 	
 	private void updateText() {
-		String s = "Some dummy text.";
+		int[] histoArray = histoView.getPixels();
+		Arrays.sort(histoArray);
+		String maximum = "Max: " + argb_read(histoArray[histoArray.length-1], 0);
+		String minimum = "Min: " + argb_read(histoArray[0], 0);
+		String average = "Average: " + average(histoArray);
+		String median = "Median: " + argb_read(histoArray[histoArray.length/2], 0);
 		
-		label[2].setText(s);
-		
-		double number = Math.PI;
-		s = "PI = " + format(number, 5);
-		label[4].setText(s);
-		
-		s = "Number of updates is " + updateCount + ".";
-		label[0].setText(s);
+		label[0].setText(maximum);
+		label[1].setText(minimum);
+		label[2].setText(average);
+		label[3].setText(maximum);
+		label[4].setText(median);
+		label[5].setText(maximum);
+	}
+	
+	public int average(int[] histoArray){
+		int average = 0;
+		for (int i = 0; i < histoArray.length; i++){
+			average += argb_read(histoArray[i],0);
+		}
+		return average/histoArray.length;
 	}
 
 	public String format(double x, int len) {
