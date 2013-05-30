@@ -28,12 +28,14 @@ public class Histo extends JPanel {
 	//
 	private ImageView imgView;					// image view
 	private ImageView histoView;				// histogram view
+	private int [] copyView;					// Screen View
 	private JLabel[]  label = new JLabel[8];	// text display
 
 	// internal status
 	//
 	private int  		radius 			= 0;	// current drawing radius
 	private int  		updateCount 	= 0;	// number of clicks
+	private int[] frequency = new int[256];
 	
 	public Histo() {
         super(new BorderLayout(layoutBorder, layoutBorder));
@@ -46,6 +48,8 @@ public class Histo extends JPanel {
         imgView = new ImageView(input);
         imgView.setMaxSize(new Dimension(maxImageWidth, maxImageHeight));
         makeGray(imgView);
+        copyView = imgView.getPixels().clone();
+        readFrequencies();
        
 		// create an empty histogram image
 		histoView = new ImageView(histWidth, histHeight);
@@ -304,6 +308,15 @@ public class Histo extends JPanel {
 		}
 		
 		histoView.applyChanges();
+	}
+	// liest die häufigeiten der werte zw.0 -255 aus copyview und erstellt frequency table
+	private void readFrequencies(){
+		for (int i=0;i<copyView.length;i++){
+
+			frequency[argb_read(copyView[i],0)]+=1;
+			
+		}
+		System.out.println(frequency[255]);
 	}
 
 }
