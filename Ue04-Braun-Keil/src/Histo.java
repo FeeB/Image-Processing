@@ -43,6 +43,7 @@ public class Histo extends JPanel {
         
         imgView = new ImageView(input);
         imgView.setMaxSize(new Dimension(maxImageWidth, maxImageHeight));
+        makeGray(imgView);
        
 		// create an empty histogram image
 		histoView = new ImageView(histWidth, histHeight);
@@ -55,6 +56,7 @@ public class Histo extends JPanel {
         		if(input != null) {
 	        		imgView.loadImage(input);
 	        		imgView.setMaxSize(new Dimension(maxImageWidth, maxImageHeight));
+	        		makeGray(imgView);
 	        		frame.pack();
 	                resetImage();
         		}
@@ -142,6 +144,30 @@ public class Histo extends JPanel {
 	private void resetImage() {
 		// a new image has been laoded
 		updateHistogram();
+	}
+	
+	private ImageView makeGray(ImageView imgView) {
+		int pixels[] = imgView.getPixels();
+
+		// loop over all pixels
+		for (int i = 0; i < pixels.length; i++) {
+			int r = argb_read(pixels[i], 16);
+			int b = argb_read(pixels[i], 8);
+			int g = argb_read(pixels[i], 0);
+
+			int grey_value = (r + b + g) / 3;
+
+			pixels[i] = 0xff000000 | (grey_value << 16) | (grey_value << 8)
+					| grey_value;
+
+		}
+		imgView.applyChanges();
+		return imgView;
+	}
+	
+	private int argb_read(int pixel, int shift_value) {
+		int x = (pixel >> shift_value) & 0xff;
+		return x;
 	}
 	
 	private void changeBrightness(int delta) {
