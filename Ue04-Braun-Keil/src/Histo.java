@@ -37,8 +37,7 @@ public class Histo extends JPanel {
 
 	// internal status
 	//
-	private int  		radius 			= 0;	// current drawing radius
-	private int  		updateCount 	= 0;	// number of clicks
+	
 	private int[] frequency = new int[256];
 	
 	public Histo() {
@@ -53,7 +52,6 @@ public class Histo extends JPanel {
         imgView.setMaxSize(new Dimension(maxImageWidth, maxImageHeight));
         makeGray(imgView);
         copyView = imgView.getPixels().clone();
-        readFrequencies();
        
 		// create an empty histogram image
 		histoView = new ImageView(histWidth, histHeight);
@@ -187,8 +185,6 @@ public class Histo extends JPanel {
 	
 	private void changeBrightness(int delta) {
 		
-		radius += delta > 0 ? 1 : -1;	// some dummy operation
-		
 		int pixels[] = copyView;
 		
 		for (int pos = 0; pos < pixels.length; pos++) {
@@ -263,10 +259,6 @@ public class Histo extends JPanel {
 	}
 	
 	private void updateHistogram() {
-		// ToDo: draw the histogram
-		
-		// some dummy operation
-		updateCount++;
 		drawHist();		
 		updateText();
 	}
@@ -306,36 +298,13 @@ public class Histo extends JPanel {
 		
 		return Double.toString(x);
 	}
-
-//	void drawCircle() {
-//		int pixels[] = histoView.getPixels();
-//		
-//		int width = histoView.getImgWidth();
-//		int height = histoView.getImgHeight();
-//		
-//		int xCenter = width/2;
-//		int yCenter = height/2;
-//		
-//		int squareRadius = radius*radius;
-//		
-//		for (int y = 0; y < height; y++) {
-//			for (int x = 0; x < width; x++) {
-//				int squareR = ((yCenter-y)*(yCenter-y)+(xCenter-x)*(xCenter-x));
-//				
-//				int pos = y*width+x;
-//				
-//				if (squareR < squareRadius )
-//					pixels[pos] = 0xff008100;	// dark green
-//				else
-//					pixels[pos] = 0xff000000;	// black
-//			}
-//		}
-//		
-//		histoView.applyChanges();
-//	}
+	
 	// liest die hŠufigeiten der werte zw.0 -255 aus copyview und erstellt frequency table
 	
 	private void readFrequencies(){
+		for(int i = 0; i < frequency.length; i++){
+			frequency[i] = 0;
+		}
 		int[] pixelsOfCurrentImage = imgView.getPixels();
 		
 		for (int i=0;i<pixelsOfCurrentImage.length;i++){
@@ -346,6 +315,7 @@ public class Histo extends JPanel {
 		
 	}
 	void drawHist() {
+		readFrequencies();
 		int pixels[] = histoView.getPixels();	
 		int width = histoView.getImgWidth();
 		int height = histoView.getImgHeight();
