@@ -11,6 +11,8 @@ import com.sun.tools.javac.code.Attribute.Array;
 import java.awt.event.*;
 import java.awt.*;
 import java.io.File;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Histo extends JPanel {
@@ -208,7 +210,7 @@ public class Histo extends JPanel {
 		
 		imgView.applyChanges();
 		
-		drawHist();
+		updateHistogram();
 	}
 	
 	public void changeContrast(int contrast){
@@ -245,7 +247,7 @@ public class Histo extends JPanel {
 		}
 		imgView.applyChanges();
 		
-		drawHist();
+		updateHistogram();
 	}
     
 	private int limitPixel(int pixel){
@@ -264,39 +266,79 @@ public class Histo extends JPanel {
 	}
 	
 	private void updateText() {
-		int[] histoArray = histoView.getPixels();
-		Arrays.sort(histoArray);
-		String maximum = "Max: " + argb_read(histoArray[histoArray.length-1], 16);
-		System.out.println(histoArray[histoArray.length-1]);
-		System.out.println(argb_read(histoArray[histoArray.length-1],16));
-		String minimum = "Min: " + argb_read(histoArray[0], 16);
-		String average = "Average: " + average(histoArray);
-		String median = "Median: " + argb_read(histoArray[histoArray.length/2], 16);
+
+		String maximum = "Max: " + maximum();
+		String minimum = "Min: " + minimum();
+		String average = "Average: " + average();
+		String median = "Median: " + median();
+		String varianz = "Varianz: " + varianz();
+		String entropie = "Entropie: ";
 		
 		label[0].setText(maximum);
 		label[1].setText(minimum);
 		label[2].setText(average);
-		label[3].setText(maximum);
+		label[3].setText(varianz);
 		label[4].setText(median);
-		label[5].setText(maximum);
+		label[5].setText(entropie);
 	}
 	
-	public int average(int[] histoArray){
-		int average = 0;
-		for (int i = 0; i < histoArray.length; i++){
-			average += argb_read(histoArray[i],0);
+	public int maximum(){
+		int maximum = 0;
+		for(int i = 0; i < frequency.length; i++){
+			if (maximum < frequency[i]){
+				maximum = i;
+			}
 		}
-		return average/histoArray.length;
+		return maximum;
 	}
-
-	public String format(double x, int len) {
-		double d = 1;
+	
+	public int minimum(){
+		int minimum = 255;
+		for(int i = 0; i < frequency.length; i++){
+			if (minimum > frequency[i] && frequency[i] != 0){
+				minimum = i;
+			}
+		}
+		return minimum;
+	}
+	
+	public int median(){
+		int position = 0;
+		ArrayList<Integer> newMedianArray = new ArrayList<Integer>();
+		for(int i = 0; i < frequency.length; i++){
+			if (frequency[i] != 0){
+				newMedianArray.add(position, i);
+				position++;
+			}
+		}
+		if (newMedianArray.size()%2 != 0){
+			return newMedianArray.get((newMedianArray.size()-1)/2);
+		}else{
+			return newMedianArray.get(newMedianArray.size()/2);
+		 }
 		
-		for (int i = 0; i < len; i++) d *= 10;
-		
-		x = Math.round(x * d) / d;
-		
-		return Double.toString(x);
+	}
+	
+	public double varianz(){
+		double average = average();
+		double original = 0;
+		for(int i = 0; i < frequency.length; i++){
+			if (frequency[i] != 0){
+				original += i;
+			}
+		}
+		double varianz = Math.pow(original,2) - Math.pow(average,2);
+		return Math.round((varianz / average) *100)/100;
+	}
+	
+	public double average(){
+		double average = 0.00;
+		for(int i = 0; i < frequency.length; i++){
+			if (frequency[i] != 0){
+				average += i;
+			}
+		}
+		return Math.round((average/frequency.length)*100)/100;
 	}
 	
 	// liest die hŠufigeiten der werte zw.0 -255 aus copyview und erstellt frequency table
@@ -346,8 +388,6 @@ public class Histo extends JPanel {
 		Arrays.sort(frequencyArray);
 		double x= frequencyArray[frequencyArray.length-1];
 		double heightProp= height/x;
-		System.out.println(x);
-		System.out.println(heightProp);
 		return heightProp;
 		
 	}
