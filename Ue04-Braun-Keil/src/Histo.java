@@ -320,15 +320,16 @@ public class Histo extends JPanel {
 	}
 	
 	public double varianz(){
-		double average = average();
 		double original = 0;
-		for(int i = 0; i < frequency.length; i++){
+		int lengthfrequency =  frequency.length;
+		for(int i = 0; i < lengthfrequency; i++){
+			
 			if (frequency[i] != 0){
-				original += i;
+				original += Math.pow(i,2);
 			}
 		}
-		double varianz = Math.pow(original,2) - Math.pow(average,2);
-		return Math.round((varianz / average) *100)/100;
+		double varianz = (original - Math.pow(lengthfrequency,2))/lengthfrequency;
+		return Math.round(varianz*100)/100;
 	}
 	
 	public double average(){
@@ -338,7 +339,7 @@ public class Histo extends JPanel {
 				average += i;
 			}
 		}
-		return Math.round((average/frequency.length)*100)/100;
+		return Math.round(average/frequency.length)*100/100;
 	}
 	
 	// liest die hŠufigeiten der werte zw.0 -255 aus copyview und erstellt frequency table
