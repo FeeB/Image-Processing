@@ -334,12 +334,14 @@ public class Histo extends JPanel {
 	
 	public double average(){
 		double average = 0.00;
+		int count = 0;
 		for(int i = 0; i < frequency.length; i++){
 			if (frequency[i] != 0){
 				average += i;
+				count++;
 			}
 		}
-		return Math.round(average/frequency.length)*100/100;
+		return Math.round(average/count)*100/100;
 	}
 	
 	// liest die hŠufigeiten der werte zw.0 -255 aus copyview und erstellt frequency table
