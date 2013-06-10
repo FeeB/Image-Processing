@@ -67,6 +67,7 @@ public class Histo extends JPanel {
 	        		imgView.loadImage(input);
 	        		imgView.setMaxSize(new Dimension(maxImageWidth, maxImageHeight));
 	        		makeGray(imgView);
+	        		copyView = imgView.getPixels().clone();
 	        		frame.pack();
 	                resetImage();
         		}
