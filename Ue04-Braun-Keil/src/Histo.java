@@ -97,12 +97,12 @@ public class Histo extends JPanel {
       controlPanel.add(brightnessSlider);
       
 //    Slider Kontraständerung
-    final JSlider contrastSlider = new JSlider(0, 100, 0);
+    final JSlider contrastSlider = new JSlider(0, 100, 10);
     contrastSlider.addChangeListener(new ChangeListener() {
 			
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				changeContrast(contrastSlider.getValue());
+				changeContrast((double)((contrastSlider.getValue())/10.0));
 			}
 		});
     controlPanel.add(contrastSlider);
@@ -214,9 +214,7 @@ public class Histo extends JPanel {
 		updateHistogram();
 	}
 	
-	public void changeContrast(int contrast){
-		double schwellenwert = 255 / 2;
-		
+	public void changeContrast(double contrast){
 		int pixels[] = copyView;
 		
 		for (int pos = 0; pos < pixels.length; pos++) {
@@ -226,24 +224,10 @@ public class Histo extends JPanel {
 			int r 	= (c & 0xff0000) >> 16;
 			int g 	= (c & 0x00ff00) >> 8;
 			int b 	= (c & 0x0000ff);
-			
-			if (r < schwellenwert) {
-				r = (int) (r - contrast);
-			}else if (r > schwellenwert) {
-				 r = (int) (r + contrast);
-			}
-			
-			if (g < schwellenwert) {
-				g = (int) (g - contrast);
-			}else if (g > schwellenwert) {
-				 g = (int) (g + contrast);
-			}
-			
-			if (b < schwellenwert) {
-				b = (int) (b - contrast);
-			}else if (g > schwellenwert) {
-				b = (int) (b + contrast);
-			}
+			r=(int)((r-128)*contrast+128);
+			g=(int)((g-128)*contrast+128);
+			b=(int)((b-128)*contrast+128);
+
 			imgView.pixels[pos] = 0xFF000000 + ((limitPixel(r) & 0xff) << 16) + ((limitPixel(g) & 0xff) << 8) + (limitPixel(b) & 0xff);
 		}
 		imgView.applyChanges();
@@ -330,7 +314,7 @@ public class Histo extends JPanel {
 			}
 		}
 		double varianz = (original - Math.pow(lengthfrequency,2))/lengthfrequency;
-		return Math.round(varianz*100)/100;
+		return Math.round(varianz*100)/100.0;
 	}
 	
 	public double average(){
@@ -342,7 +326,7 @@ public class Histo extends JPanel {
 				count++;
 			}
 		}
-		return Math.round(average/count)*100/100;
+		return Math.round(average/count)*100/100.0;
 	}
 	
 	// liest die häufigeiten der werte zw.0 -255 aus copyview und erstellt frequency table
