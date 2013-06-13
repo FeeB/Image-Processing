@@ -2,13 +2,10 @@
 //
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.*;
 import java.awt.*;
 import java.io.File;
-import java.util.Random;
 
 public class DPCM extends JPanel {
 
@@ -16,27 +13,17 @@ public class DPCM extends JPanel {
 	private static final int borderWidth = 5;
 	private static final int maxWidth = 400;
 	private static final int maxHeight = maxWidth;
-	private static final int maxNoise = 30; // in per cent
-
 	private static JFrame frame;
 
-	private ImageView srcView; // source image view
-	private ImageView dstView; // filtered image view
+	private ImageView origView; // source image view
+	private ImageView praedError; // filtered image view
+	private ImageView recView; // filtered image view
 
 	private int[] origPixels = null;
 
 	private JLabel statusLine = new JLabel("   "); // to print some status text
 
 	private JComboBox noiseType;
-	private JLabel noiseLabel;
-	private JSlider noiseSlider;
-	private JLabel noiseAmountLabel;
-	private boolean addNoise = false;
-	private double noiseFraction = 0.01; // fraction for number of pixels to be
-											// modified by noise
-
-	private JComboBox filterType;
-
 	public DPCM() {
 		super(new BorderLayout(borderWidth, borderWidth));
 
@@ -49,19 +36,23 @@ public class DPCM extends JPanel {
 		if (!input.canRead())
 			input = openFile(); // file not found, choose another image
 
-		srcView = new ImageView(input);
-		srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
+		origView = new ImageView(input);
+		origView.setMaxSize(new Dimension(maxWidth, maxHeight));
 
 		// convert to grayscale
-		makeGray(srcView);
+		makeGray(origView);
 
 		// keep a copy of the grayscaled original image pixels
-		origPixels = srcView.getPixels().clone();
+		origPixels = origView.getPixels().clone();
 
 		// create empty destination image of same size
-		dstView = new ImageView(srcView.getImgWidth(), srcView.getImgHeight());
-		dstView.setMaxSize(new Dimension(maxWidth, maxHeight));
+		praedError = new ImageView(origView.getImgWidth(), origView.getImgHeight());
+		praedError.setMaxSize(new Dimension(maxWidth, maxHeight));
 
+		// create empty destination image of same size
+		recView = new ImageView(origView.getImgWidth(), origView.getImgHeight());
+		recView.setMaxSize(new Dimension(maxWidth, maxHeight));
+		
 		// control panel
 		JPanel controls = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -73,63 +64,30 @@ public class DPCM extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				loadFile(openFile());
 				// convert to grayscale
-				makeGray(srcView);
+				makeGray(origView);
 				// keep a copy of the grayscaled original image pixels
-				origPixels = srcView.getPixels().clone();
+				origPixels = origView.getPixels().clone();
 			}
 		});
 
 		// selector for the noise method
-		String[] noiseNames = { "No Noise", "Salt & Pepper" };
+		String[] noiseNames = { "A (horizontal)", "B (vertikal)", "C (diagonal)", "A+B-C", "(A+B)/2", "adaptiv" };
 
 		noiseType = new JComboBox(noiseNames);
 		noiseType.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				addNoise = noiseType.getSelectedIndex() > 0;
-				noiseLabel.setEnabled(addNoise);
-				noiseSlider.setEnabled(addNoise);
-				noiseAmountLabel.setEnabled(addNoise);
-			}
-		});
 
-		// amount of noise
-		noiseLabel = new JLabel("Noise:");
-		noiseAmountLabel = new JLabel("" + Math.round(noiseFraction * 100.0)
-				+ " %");
-		noiseSlider = new JSlider(JSlider.HORIZONTAL, 0, maxNoise,
-				(int) Math.round(noiseFraction * 100.0));
-		noiseSlider.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				noiseFraction = noiseSlider.getValue() / 100.0;
-				noiseAmountLabel.setText("" + Math.round(noiseFraction * 100.0)
-						+ " %");
-				calculate(true);
-			}
-		});
-		noiseLabel.setEnabled(addNoise);
-		noiseSlider.setEnabled(addNoise);
-		noiseAmountLabel.setEnabled(addNoise);
-
-		// selector for filter
-		String[] filterNames = { "No Filter", "Min Filter", "Max Filter",
-				"Box Filter", "Median Filter" };
-		filterType = new JComboBox(filterNames);
-		filterType.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
 			}
 		});
 
 		controls.add(load, c);
 		controls.add(noiseType, c);
-		controls.add(noiseLabel, c);
-		controls.add(noiseSlider, c);
-		controls.add(noiseAmountLabel, c);
-		controls.add(filterType, c);
 
 		// images panel
-		JPanel images = new JPanel(new GridLayout(1, 2));
-		images.add(srcView);
-		images.add(dstView);
+		JPanel images = new JPanel(new GridLayout(1, 4));
+		images.add(origView);
+		images.add(praedError);
+		images.add(recView);
 
 		// status panel
 		JPanel status = new JPanel(new GridBagLayout());
@@ -154,10 +112,10 @@ public class DPCM extends JPanel {
 
 	private void loadFile(File file) {
 		if (file != null) {
-			srcView.loadImage(file);
-			srcView.setMaxSize(new Dimension(maxWidth, maxHeight));
+			origView.loadImage(file);
+			origView.setMaxSize(new Dimension(maxWidth, maxHeight));
 			// create empty destination image of same size
-			dstView.resetToSize(srcView.getImgWidth(), srcView.getImgHeight());
+			praedError.resetToSize(origView.getImgWidth(), origView.getImgHeight());
 			frame.pack();
 		}
 
@@ -207,14 +165,6 @@ public class DPCM extends JPanel {
 					| grey_value;
 
 		}
-	}
-
-	private void filter() {
-		int src[] = srcView.getPixels();
-		int dst[] = dstView.getPixels();
-		int width = srcView.getImgWidth();
-		int height = srcView.getImgHeight();
-		int filter = filterType.getSelectedIndex();
 	}
 	
 	private int argb_read(int pixel, int shift_value) {
