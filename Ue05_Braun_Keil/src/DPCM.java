@@ -20,10 +20,11 @@ public class DPCM extends JPanel {
 	private ImageView recView; // filtered image view
 
 	private int[] origPixels = null;
+	private int[] praedikation;
 
 	private JLabel statusLine = new JLabel("   "); // to print some status text
 
-	private JComboBox noiseType;
+	private JComboBox praedikationType;
 	public DPCM() {
 		super(new BorderLayout(borderWidth, borderWidth));
 
@@ -31,7 +32,7 @@ public class DPCM extends JPanel {
 				borderWidth, borderWidth));
 
 		// load the default image
-		File input = new File("lena_klein.png");
+		File input = new File("test1.jpg");
 
 		if (!input.canRead())
 			input = openFile(); // file not found, choose another image
@@ -44,6 +45,8 @@ public class DPCM extends JPanel {
 
 		// keep a copy of the grayscaled original image pixels
 		origPixels = origView.getPixels().clone();
+		
+		
 
 		// create empty destination image of same size
 		praedError = new ImageView(origView.getImgWidth(), origView.getImgHeight());
@@ -52,6 +55,8 @@ public class DPCM extends JPanel {
 		// create empty destination image of same size
 		recView = new ImageView(origView.getImgWidth(), origView.getImgHeight());
 		recView.setMaxSize(new Dimension(maxWidth, maxHeight));
+		
+		preadikation(1);
 		
 		// control panel
 		JPanel controls = new JPanel(new GridBagLayout());
@@ -71,17 +76,29 @@ public class DPCM extends JPanel {
 		});
 
 		// selector for the noise method
-		String[] noiseNames = { "A (horizontal)", "B (vertikal)", "C (diagonal)", "A+B-C", "(A+B)/2", "adaptiv" };
+		String[] praedikationNames = { "A (horizontal)", "B (vertikal)", "C (diagonal)", "A+B-C", "(A+B)/2", "adaptiv" };
 
-		noiseType = new JComboBox(noiseNames);
-		noiseType.addActionListener(new ActionListener() {
+		praedikationType = new JComboBox(praedikationNames);
+		praedikationType.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-
+				if (praedikationType.getSelectedIndex() == 0){
+					preadikation(1);
+				} else if (praedikationType.getSelectedIndex() == 1){
+					preadikation(2);
+				} else if (praedikationType.getSelectedIndex() == 2){
+					preadikation(3);
+				} else if (praedikationType.getSelectedIndex() == 3){
+					preadikation(4);
+				} else if (praedikationType.getSelectedIndex() == 4){
+					preadikation(5);
+				} else if (praedikationType.getSelectedIndex() == 5){
+					preadikation(6);
+				}
 			}
 		});
 
 		controls.add(load, c);
-		controls.add(noiseType, c);
+		controls.add(praedikationType, c);
 
 		// images panel
 		JPanel images = new JPanel(new GridLayout(1, 4));
@@ -113,9 +130,12 @@ public class DPCM extends JPanel {
 	private void loadFile(File file) {
 		if (file != null) {
 			origView.loadImage(file);
+			makeGray(origView);
 			origView.setMaxSize(new Dimension(maxWidth, maxHeight));
 			// create empty destination image of same size
 			praedError.resetToSize(origView.getImgWidth(), origView.getImgHeight());
+			recView.resetToSize(origView.getImgWidth(), origView.getImgHeight());
+			preadikation(1);
 			frame.pack();
 		}
 
@@ -123,7 +143,7 @@ public class DPCM extends JPanel {
 
 	private static void createAndShowGUI() {
 		// create and setup the window
-		frame = new JFrame("Ue01_Nachname_Vorname");
+		frame = new JFrame("Ue05_Braun_Keil");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		JComponent newContentPane = new DPCM();
@@ -165,10 +185,81 @@ public class DPCM extends JPanel {
 					| grey_value;
 
 		}
+		imgView.applyChanges();
 	}
 	
 	private int argb_read(int pixel, int shift_value) {
 		int x = (pixel >> shift_value) & 0xff;
 		return x;
+	}
+	
+	private void preadikation(int type){
+		praedikation = new int[origView.getPixels().length];
+		int src[] = origView.getPixels();
+		for (int y = 0; y < origView.getImgHeight(); y++){
+			for (int x = 0; x < origView.getImgWidth(); x++){
+				if (type == 1 && x != 0){
+					praedikation[y * praedError.getImgWidth() + x] = src[y * origView.getImgWidth() + x -1];
+				}else if(type == 2 && y != 0){
+					praedikation[y * praedError.getImgWidth() + x] = src[(y-1) * origView.getImgWidth() + x];
+				}else if(type == 3 && y != 0 && x != 0){
+					praedikation[y * praedError.getImgWidth() + x] = src[(y-1) * origView.getImgWidth() + (x -1)];
+				}else if(type == 4 && y != 0 && x != 0){
+					praedikation[y * praedError.getImgWidth() + x] = src[y * origView.getImgWidth() + x -1] + src[(y-1) * origView.getImgWidth() + x] - src[(y-1) * origView.getImgWidth() + x -1];
+				}else if(type == 5 && y != 0 && x != 0){
+					int a = src[y * origView.getImgWidth() + x -1];
+					int b = src[(y-1) * origView.getImgWidth() + x];
+					praedikation[y * praedError.getImgWidth() + x] = (a+b)/2;
+				}else if (type == 6 && y != 0 && x != 0){
+					int aMinusC = 0;
+					int bMinusC = 0;
+					if (src[y * origView.getImgWidth() + x -1]-src[(y-1) * origView.getImgWidth() + x -1] < 0){
+						aMinusC = (src[y * origView.getImgWidth() + x -1]-src[(y-1) * origView.getImgWidth() + x -1])*(-1);
+					}else{
+						aMinusC = (src[y * origView.getImgWidth() + x -1]-src[(y-1) * origView.getImgWidth() + x -1]);
+					}
+					if (src[(y-1) * origView.getImgWidth() + x]-src[(y-1) * origView.getImgWidth() + x -1] < 0){
+						bMinusC = (src[(y-1) * origView.getImgWidth() + x]-src[(y-1) * origView.getImgWidth() + x -1])*(-1);
+					}else{
+						bMinusC = (src[(y-1) * origView.getImgWidth() + x]-src[(y-1) * origView.getImgWidth() + x -1]);
+					}
+					
+					if (aMinusC < bMinusC){
+						praedikation[y * praedError.getImgWidth() + x] = src[(y-1) * origView.getImgWidth() + x];
+					}else{
+						praedikation[y * praedError.getImgWidth() + x] = src[y * origView.getImgWidth() + x -1];
+					}
+				}else{
+					praedikation[y * praedError.getImgWidth() + x] = 0xFFFFFF;
+				}
+				
+			}
+		}
+		createPraedikationImage();
+	}
+	
+	public void createPraedikationImage(){
+		int dst[] = new int[origView.getPixels().length];
+		int src[] = origView.getPixels();
+		for (int y = 0; y < praedError.getImgHeight(); y++){
+			for (int x = 0; x < praedError.getImgWidth(); x++){
+				int error = src[y * praedError.getImgWidth() + x] - praedikation[y * praedError.getImgWidth() + x];
+				error = error + 0xff808080;
+				dst[y * praedError.getImgWidth() + x] = error;
+			}
+			praedError.setPixels(dst);
+		}
+		createReconstructedImage();
+	}
+	
+	public void createReconstructedImage(){
+		int dst[] = new int[origView.getPixels().length];
+		int error[] = praedError.getPixels();
+		for (int y = 0; y < recView.getImgHeight(); y++){
+			for (int x = 0; x < recView.getImgWidth(); x++){
+				dst[y * recView.getImgWidth() + x] = (error[y * praedError.getImgWidth() + x] - 0xff808080) + praedikation[y * praedError.getImgWidth() + x];
+			}
+		}
+		recView.setPixels(dst);
 	}
 }
