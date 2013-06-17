@@ -6,6 +6,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.*;
 import java.awt.*;
 import java.io.File;
+import java.util.HashMap;
 
 public class DPCM extends JPanel {
 
@@ -23,6 +24,9 @@ public class DPCM extends JPanel {
 	private int[] praedikation;
 
 	private JLabel statusLine = new JLabel("   "); // to print some status text
+	private JLabel label = new JLabel("   ");
+	private JLabel label1 = new JLabel("   ");
+	private JLabel label2 = new JLabel("   ");
 
 	private JComboBox praedikationType;
 	public DPCM() {
@@ -42,7 +46,7 @@ public class DPCM extends JPanel {
 
 		// convert to grayscale
 		makeGray(origView);
-
+		
 		// keep a copy of the grayscaled original image pixels
 		origPixels = origView.getPixels().clone();
 		
@@ -75,7 +79,7 @@ public class DPCM extends JPanel {
 			}
 		});
 
-		// selector for the noise method
+		// selector for the praedikation type
 		String[] praedikationNames = { "A (horizontal)", "B (vertikal)", "C (diagonal)", "A+B-C", "(A+B)/2", "adaptiv" };
 
 		praedikationType = new JComboBox(praedikationNames);
@@ -99,9 +103,23 @@ public class DPCM extends JPanel {
 
 		controls.add(load, c);
 		controls.add(praedikationType, c);
+		
+		// text display
+        JPanel controlPanel = new JPanel(new GridLayout(1, 3));
+        
+        String string = " ";
+        
+        label = new JLabel(string);
+        label1 = new JLabel(string);
+        label2 = new JLabel(string);
+        controlPanel.add(label);
+        controlPanel.add(label1);
+        controlPanel.add(label2);
+		
+		updateText();
 
 		// images panel
-		JPanel images = new JPanel(new GridLayout(1, 4));
+		JPanel images = new JPanel(new GridLayout(1, 3));
 		images.add(origView);
 		images.add(praedError);
 		images.add(recView);
@@ -113,7 +131,7 @@ public class DPCM extends JPanel {
 
 		add(controls, BorderLayout.NORTH);
 		add(images, BorderLayout.CENTER);
-		add(status, BorderLayout.SOUTH);
+		add(controlPanel, BorderLayout.SOUTH);
 	}
 
 	private File openFile() {
@@ -261,5 +279,39 @@ public class DPCM extends JPanel {
 			}
 		}
 		recView.setPixels(dst);
+		updateText();
+	}
+	
+	public double calculateEntropy(ImageView imgView){
+		int[] pixels = imgView.getPixels();
+		HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+		for (int i = 0; i < pixels.length; i++){
+			if(!map.containsKey(pixels[i])){
+				map.put(pixels[i], 1);
+			}else{
+				map.put(pixels[i], map.get(pixels[i])+1);
+			}
+		}
+		
+		double entropy = 0.0;
+		for (int i : map.keySet()) {
+			double frequency = map.get(i);
+			double size = pixels.length;
+			double result = frequency/size;
+			entropy += result * (Math.log(result) / Math.log(2));
+		}
+		double r = -(Math.round(entropy*1000));
+		return r /1000;
+	}
+	
+	private void updateText() {
+		
+		String entropie1 = "Entropie: " + calculateEntropy(origView);
+		String entropie2 = "Entropie: " + calculateEntropy(praedError);
+		String entropie3 = "Entropie: " + calculateEntropy(recView);
+		
+		label.setText(entropie1);
+		label1.setText(entropie2);
+		label2.setText(entropie3);
 	}
 }
