@@ -2,6 +2,7 @@
 //
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.*;
 import java.awt.*;
@@ -27,6 +28,7 @@ public class DPCM extends JPanel {
 	private JLabel label = new JLabel("   ");
 	private JLabel label1 = new JLabel("   ");
 	private JLabel label2 = new JLabel("   ");
+	private JLabel label3 = new JLabel("   ");
 
 	private JComboBox praedikationType;
 	public DPCM() {
@@ -105,21 +107,30 @@ public class DPCM extends JPanel {
 		controls.add(praedikationType, c);
 		
 		// text display
-        JPanel controlPanel = new JPanel(new GridLayout(1, 3));
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 10, 0));
         
         String string = " ";
         
         label = new JLabel(string);
+        label.setBorder(BorderFactory.createEmptyBorder(0, 100, 0, 50));
         label1 = new JLabel(string);
+        label1.setBorder(BorderFactory.createEmptyBorder(0, 150, 0, 150));
         label2 = new JLabel(string);
+        label2.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 50));
+        label3 = new JLabel(string);
+        label3.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 50));
+
         controlPanel.add(label);
         controlPanel.add(label1);
         controlPanel.add(label2);
+        controlPanel.add(label3);
+        
 		
 		updateText();
 
 		// images panel
 		JPanel images = new JPanel(new GridLayout(1, 3));
+		
 		images.add(origView);
 		images.add(praedError);
 		images.add(recView);
@@ -304,14 +315,27 @@ public class DPCM extends JPanel {
 		return r /1000;
 	}
 	
+	public double calculateMSE(ImageView imgView){
+		int[] recPixels = imgView.getPixels();
+		int [] orgPixels= origView.getPixels();
+		double mse =0.0;
+		for(int i=0;i<recPixels.length;i++){
+				mse+= Math.pow((orgPixels[i]-recPixels[i]),2);
+		}
+		mse= mse/recPixels.length;
+		return mse;
+	}
+	
 	private void updateText() {
 		
 		String entropie1 = "Entropie: " + calculateEntropy(origView);
 		String entropie2 = "Entropie: " + calculateEntropy(praedError);
 		String entropie3 = "Entropie: " + calculateEntropy(recView);
+		String mse = "MSE: " + calculateMSE(recView);
 		
 		label.setText(entropie1);
 		label1.setText(entropie2);
 		label2.setText(entropie3);
+		label3.setText(mse);
 	}
 }
